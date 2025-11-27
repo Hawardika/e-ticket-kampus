@@ -26,9 +26,8 @@ dependencies {
     testImplementation(kotlin("test"))
     testImplementation("io.ktor:ktor-server-test-host-jvm:3.0.0") // ← ini yang benar
 }
-application {
-    mainClass.set("io.ktor.server.netty.EngineMain")
-}
+application { mainClass.set("app.ApplicationKt") }
+
 tasks.test {
     useJUnitPlatform()
 }
