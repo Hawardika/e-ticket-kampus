@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 enum class OrderStatus {PENDING, PAID, CANCELLED}
 
+@Serializable
 data class Order(
     val id : Long,
     val userId : Long,

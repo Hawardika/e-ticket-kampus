@@ -14,23 +14,21 @@ fun Route.paymentRoutes() {
 
     route("/payments") {
         post {
-            try {
-                val req = call.receive<PaymentCreateRequest>()
+            val req = call.receive<PaymentCreateRequest>()
+            val result = service.create(req)
+            call.respond(HttpStatusCode.Created, result)
+        }
 
-                val result = service.create(req)
-
-                call.respond(HttpStatusCode.Created, result)
-            } catch (e: Exception) {
-
-                call.respond(HttpStatusCode.BadRequest, mapOf("error" to (e.message ?: "Invalid Data")))
-            }
+        get {
+            val result = service.list()
+            call.respond(result)
         }
 
         post("/{id}/capture") {
             val id = call.parameters["id"]?.toLongOrNull()
 
             if (id == null) {
-                call.respond(HttpStatusCode.BadRequest, "Invalid ID")
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid ID"))
                 return@post
             }
 
@@ -39,7 +37,7 @@ fun Route.paymentRoutes() {
             if (updatedPayment != null) {
                 call.respond(updatedPayment)
             } else {
-                call.respond(HttpStatusCode.NotFound, "Payment not found")
+                call.respond(HttpStatusCode.NotFound, mapOf("error" to "Payment not found"))
             }
         }
     }

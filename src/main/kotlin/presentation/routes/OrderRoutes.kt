@@ -21,13 +21,23 @@ fun Route.orderRoutes() {
 
         route("/{id}") {
             post("/cancel") {
-                val id = call.parameters["id"]!!.toLong()
-                call.respond(service.cancel(id))
+                val id = call.parameters["id"]?.toLongOrNull()
+                if (id == null) {
+                    call.respond(io.ktor.http.HttpStatusCode.BadRequest, mapOf("error" to "Invalid ID"))
+                    return@post
+                }
+                service.cancel(id)
+                call.respond(mapOf("message" to "Order cancelled successfully"))
             }
 
             post("/pay") {
-                val id = call.parameters["id"]!!.toLong()
-                call.respond(service.markPaid(id))
+                val id = call.parameters["id"]?.toLongOrNull()
+                if (id == null) {
+                    call.respond(io.ktor.http.HttpStatusCode.BadRequest, mapOf("error" to "Invalid ID"))
+                    return@post
+                }
+                service.markPaid(id)
+                call.respond(mapOf("message" to "Order marked as paid"))
             }
         }
     }

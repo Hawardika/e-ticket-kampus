@@ -13,6 +13,7 @@ fun main() {
 }
 
 fun Application.module() {
+    configureCORS() // ← TAMBAHKAN INI PALING ATAS
     configureSerialization()
     configureErrorHandling()
 
@@ -21,7 +22,6 @@ fun Application.module() {
     if (enableDb) {
         runCatching { configureDatabase() }
             .onFailure { cause ->
-                // jangan bunuh server; cukup log
                 log.warn("Database init failed: ${cause.message}. Server jalan tanpa DB.", cause)
             }
     } else {

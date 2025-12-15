@@ -9,6 +9,7 @@ data class EventCreateRequest(
     val date: String,
     val venue: String
 )
+
 @Serializable
 data class EventResponse(
     val id: Long,

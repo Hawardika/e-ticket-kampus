@@ -29,6 +29,10 @@ services:
       DB_USER: root
       DB_PASS: root
       PORT: "8080"
+#    Midtrans
+      MIDTRANS_SERVER_KEY: ""
+      MIDTRANS_CLIENT_KEY: ""
+      MIDTRANS_IS_PRODUCTION: "false"
     ports:
       - "8080:8080"
     depends_on:

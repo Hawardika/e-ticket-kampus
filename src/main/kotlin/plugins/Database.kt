@@ -6,6 +6,9 @@ import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import app.data.tables.UsersTable
 import app.data.tables.EventsTable
+import app.data.tables.TicketTypesTable
+import app.data.tables.OrdersTable
+import app.data.repositories.PaymentsTable
 
 object DatabaseFactory {
     fun init() {
@@ -18,7 +21,15 @@ object DatabaseFactory {
         }
         val ds = HikariDataSource(cfg)
         Database.connect(ds)
-        transaction { SchemaUtils.create(UsersTable, EventsTable) }
+        transaction {
+            SchemaUtils.create(
+                UsersTable,
+                EventsTable,
+                TicketTypesTable,
+                OrdersTable,
+                PaymentsTable
+            )
+        }
     }
 }
 

@@ -20,6 +20,7 @@ data class TicketResponse(
     val available: Int
 )
 
+// Domain model (tidak perlu @Serializable karena cuma internal)
 data class TicketType(
     val id: Long,
     val eventId: Long,
