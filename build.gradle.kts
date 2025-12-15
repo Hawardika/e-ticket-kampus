@@ -11,6 +11,7 @@ repositories {
 
 dependencies {
     testImplementation(kotlin("test"))
+    implementation("com.midtrans:java-library:3.0.0")
     implementation("io.ktor:ktor-server-core-jvm:3.0.0")
     implementation("io.ktor:ktor-server-netty-jvm:3.0.0")
     implementation("io.ktor:ktor-server-content-negotiation-jvm:3.0.0")
@@ -35,3 +36,4 @@ tasks.test {
 kotlin {
     jvmToolchain(17)
 }
+

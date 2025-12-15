@@ -1,12 +1,14 @@
 package app.plugins
+
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
-class ValidationException(val errors: Map<String,String>): RuntimeException()
-class ConflictException(msg: String): RuntimeException(msg)
+
+
 fun Application.configureErrorHandling() {
     install(StatusPages) {
+        // Karena satu package (app.plugins), dia otomatis kenal ValidationException dari file sebelah
         exception<ValidationException> { call, ex ->
             call.respond(HttpStatusCode.UnprocessableEntity, mapOf("errors" to ex.errors))
         }

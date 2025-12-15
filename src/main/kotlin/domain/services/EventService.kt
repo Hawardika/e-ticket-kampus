@@ -8,3 +8,4 @@ class EventService(private val repo: EventRepository = EventRepository()) {
     fun publish(id: Long) = repo.publish(id)
     fun listPublished() = repo.listPublished()
 }
+

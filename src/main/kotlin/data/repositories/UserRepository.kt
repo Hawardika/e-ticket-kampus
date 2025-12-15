@@ -15,13 +15,23 @@ class UserRepository {
 
     fun list(): List<UserResponse> = transaction {
         UsersTable.selectAll().map {
-            UserResponse(it[UsersTable.id].value, it[UsersTable.name], it[UsersTable.email], it[UsersTable.phone])
+            UserResponse(
+                it[UsersTable.id].value,
+                it[UsersTable.name],
+                it[UsersTable.email],
+                it[UsersTable.phone]
+            )
         }
     }
 
     fun findByEmail(email: String): UserResponse? = transaction {
         UsersTable.select { UsersTable.email eq email }.singleOrNull()?.let {
-            UserResponse(it[UsersTable.id].value, it[UsersTable.name], it[UsersTable.email], it[UsersTable.phone])
+            UserResponse(
+                it[UsersTable.id].value,
+                it[UsersTable.name],
+                it[UsersTable.email],
+                it[UsersTable.phone]
+            )
         }
     }
 }

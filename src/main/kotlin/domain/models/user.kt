@@ -8,6 +8,7 @@ data class UserCreateRequest(
     val email: String,
     val phone: String? = null
 )
+
 @Serializable
 data class UserResponse(
     val id: Long,
