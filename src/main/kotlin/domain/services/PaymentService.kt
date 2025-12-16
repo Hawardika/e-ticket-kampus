@@ -2,8 +2,8 @@ package app.domain.services
 
 import app.data.repositories.PaymentRepository
 import app.domain.models.*
-import com.midtrans.Config
-import com.midtrans.httpclient.SnapApi
+import app.infrastructure.payment.*
+import kotlinx.coroutines.runBlocking
 import java.time.LocalDateTime
 
 class PaymentService(
@@ -11,48 +11,63 @@ class PaymentService(
 ) {
 
     private val midtransEnabled: Boolean
-    private val midtransConfig: Config?
+    private val midtransClient: MidtransClient?
 
     init {
         val serverKey = System.getenv("MIDTRANS_SERVER_KEY")
-        val clientKey = System.getenv("MIDTRANS_CLIENT_KEY")
         val isProduction = System.getenv("MIDTRANS_IS_PRODUCTION")?.toBoolean() ?: false
 
-        midtransEnabled = serverKey != null && clientKey != null
+        midtransEnabled = !serverKey.isNullOrBlank()
 
-        midtransConfig = if (midtransEnabled) {
-            Config(serverKey, clientKey, isProduction)
+        midtransClient = if (midtransEnabled) {
+            println("✅ Midtrans enabled (${if (isProduction) "PRODUCTION" else "SANDBOX"})")
+            MidtransClient(serverKey!!, isProduction)
         } else {
-            println("⚠️ Midtrans disabled: MIDTRANS_SERVER_KEY or MIDTRANS_CLIENT_KEY not set")
+            println("⚠️ Midtrans disabled: MIDTRANS_SERVER_KEY not set")
             null
         }
     }
 
     fun create(req: PaymentCreateRequest): PaymentResponse {
-        val payment = repo.insert(req)
+        var snapToken: String? = null
+        var redirectUrl: String? = null
 
-        if (midtransEnabled && midtransConfig != null) {
+        // Create Midtrans Snap Token
+        if (midtransEnabled && midtransClient != null) {
             try {
-                val params = hashMapOf<String, Any>(
-                    "transaction_details" to hashMapOf(
-                        "order_id" to payment.id.toString(),
-                        "gross_amount" to payment.amount
+                val snapRequest = SnapTokenRequest(
+                    transaction_details = TransactionDetails(
+                        order_id = "ORDER-${System.currentTimeMillis()}",
+                        gross_amount = req.amount
                     ),
-                    "credit_card" to hashMapOf(
-                        "secure" to true
-                    )
+                    customer_details = if (req.customerEmail != null) {
+                        CustomerDetails(
+                            first_name = req.customerName ?: "Customer",
+                            email = req.customerEmail,
+                            phone = req.customerPhone ?: ""
+                        )
+                    } else null
                 )
 
-                val snapToken = SnapApi.createTransactionToken(params, midtransConfig)
-                println("✅ Midtrans Token Created: $snapToken")
+                val snapResponse = runBlocking {
+                    midtransClient.createSnapToken(snapRequest)
+                }
+
+                snapToken = snapResponse.token
+                redirectUrl = snapResponse.redirect_url
+
+                println("✅ Midtrans Snap Token: $snapToken")
 
             } catch (e: Exception) {
                 println("❌ Midtrans Error: ${e.message}")
                 e.printStackTrace()
             }
         } else {
-            println("ℹ️ Payment created without Midtrans integration (ID: ${payment.id})")
+            println("ℹ️ Payment created without Midtrans (Midtrans disabled)")
         }
+
+        // Save to database
+        val payment = repo.insert(req, snapToken, redirectUrl)
 
         return PaymentResponse(
             id = payment.id,
@@ -60,7 +75,9 @@ class PaymentService(
             amount = payment.amount,
             method = payment.method,
             paidAt = payment.paidAt?.toString(),
-            status = payment.status
+            status = payment.status,
+            snapToken = snapToken,
+            redirectUrl = redirectUrl
         )
     }
 
@@ -73,8 +90,26 @@ class PaymentService(
                 amount = it.amount,
                 method = it.method,
                 paidAt = it.paidAt?.toString(),
-                status = it.status
+                status = it.status,
+                snapToken = it.snapToken,
+                redirectUrl = it.snapRedirectUrl
             )
+        }
+    }
+
+    fun checkStatus(orderId: String): TransactionStatusResponse? {
+        if (!midtransEnabled || midtransClient == null) {
+            println("⚠️ Cannot check status: Midtrans disabled")
+            return null
+        }
+
+        return try {
+            runBlocking {
+                midtransClient.getTransactionStatus(orderId)
+            }
+        } catch (e: Exception) {
+            println("❌ Error checking status: ${e.message}")
+            null
         }
     }
 
@@ -86,7 +121,9 @@ class PaymentService(
                 amount = it.amount,
                 method = it.method,
                 paidAt = it.paidAt?.toString(),
-                status = it.status
+                status = it.status,
+                snapToken = it.snapToken,
+                redirectUrl = it.snapRedirectUrl
             )
         }
     }

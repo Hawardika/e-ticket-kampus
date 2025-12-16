@@ -20,17 +20,21 @@ class PaymentRepository {
             amount = row[PaymentsTable.amount],
             method = row[PaymentsTable.method],
             paidAt = row[PaymentsTable.paidAt],
-            status = row[PaymentsTable.status]
+            status = row[PaymentsTable.status],
+            snapToken = row[PaymentsTable.snapToken],
+            snapRedirectUrl = row[PaymentsTable.snapRedirectUrl]
         )
     }
 
-    fun insert(req: PaymentCreateRequest): Payment = transaction {
+    fun insert(req: PaymentCreateRequest, snapToken: String? = null, redirectUrl: String? = null): Payment = transaction {
         val newId = PaymentsTable.insertAndGetId {
             it[orderId] = req.orderId
             it[amount] = req.amount
             it[method] = req.method
             it[status] = PayStatus.INIT
             it[paidAt] = null
+            it[PaymentsTable.snapToken] = snapToken
+            it[snapRedirectUrl] = redirectUrl
         }
 
         Payment(
@@ -39,7 +43,9 @@ class PaymentRepository {
             amount = req.amount,
             method = req.method,
             paidAt = null,
-            status = PayStatus.INIT
+            status = PayStatus.INIT,
+            snapToken = snapToken,
+            snapRedirectUrl = redirectUrl
         )
     }
 
@@ -72,4 +78,6 @@ object PaymentsTable : LongIdTable("payments") {
     val method = enumerationByName("method", 20, PayMethod::class)
     val status = enumerationByName("status", 20, PayStatus::class).default(PayStatus.INIT)
     val paidAt = datetime("paid_at").nullable()
+    val snapToken = varchar("snap_token", 255).nullable()
+    val snapRedirectUrl = varchar("snap_redirect_url", 500).nullable()
 }

@@ -24,14 +24,19 @@ data class Payment(
     val amount : Int,
     val method : PayMethod,
     val paidAt : LocalDateTime?,
-    val status : PayStatus
+    val status : PayStatus,
+    val snapToken : String? = null,
+    val snapRedirectUrl : String? = null
 )
 
 @Serializable
 data class PaymentCreateRequest(
     val orderId : Long,
     val amount : Int,
-    val method : PayMethod
+    val method : PayMethod,
+    val customerName: String? = null,
+    val customerEmail: String? = null,
+    val customerPhone: String? = null
 )
 
 // Response model (serializable, convert LocalDateTime jadi String)
@@ -41,6 +46,8 @@ data class PaymentResponse(
     val orderId : Long,
     val amount : Int,
     val method : PayMethod,
-    val paidAt : String?,  // ← Changed from LocalDateTime
-    val status : PayStatus
+    val paidAt : String?,
+    val status : PayStatus,
+    val snapToken : String? = null,      // Token untuk popup Midtrans
+    val redirectUrl : String? = null     // URL redirect Midtrans
 )
